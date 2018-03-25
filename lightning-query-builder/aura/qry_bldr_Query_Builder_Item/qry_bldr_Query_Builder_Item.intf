@@ -1,0 +1,23 @@
+<aura:interface description="qry_bldr_Query_Builder_Item: Each query items should implement this interface in order to be used in query building.">
+    
+	<aura:attribute type="String" name="order" description="Order of condition." />
+    <aura:attribute type="String" name="field" default="" description="Resulting query object field. e.g. 'Account.Name'" />
+    <aura:attribute type="String" name="action" default="" description="Resulting query action. e.g. 'equals'" />
+    <aura:attribute type="String" name="compareValue" default="" description="Resulting query compare value 'Burlington textile company'" />
+	<aura:attribute type="List" name="standardActions" description="Array of standard actions for reference." default="[
+        {'label' : '--None--', 'value' : 'none', 'selected' : true, 							'action' : ''},
+        {'label' : 'equals', 'value' : 'equals', 'selected' : false, 							'action' : ' {field} = {value} '},
+        {'label' : 'not equal to', 'value' : 'not_equals_to', 'selected' : false, 				'action' : ' {field} != {value} '},
+        {'label' : 'starts with', 'value' : 'starts_with', 'selected' : false, 					'action' : ' {field} LIKE {value} '},
+        {'label' : 'contains', 'value' : 'contains', 'selected' : false, 						'action' : ' {value} LIKE {value} '},
+        {'label' : 'does not contain', 'value' : 'does_not_contain', 'selected' : false, 		'action' : ' {field} NOT LIKE {value} '},
+        {'label' : 'less then', 'value' : 'less_then', 'selected' : false, 						'action' : ' {field} &lt; {value} '}, 
+        {'label' : 'greater then', 'value' : 'greater_then', 'selected' : false, 				'action' : ' {field} &gt; {value} '},
+        {'label' : 'less or equal', 'value' : 'less_or_equal', 'selected' : false, 				'action' : ' {field} &lt;= {value} '},
+        {'label' : 'greater or equal', 'value' : 'greater_or_equal', 'selected' : false, 		'action' : ' {field} &gt;= {value} '},
+        {'label' : 'includes', 'value' : 'includes', 'selected' : false, 						'action' : ' {field} IN ({value}) '},
+        {'label' : 'excludes', 'value' : 'excludes', 'selected' : false, 						'action' : ' {field} NOT IN ({value}) '}
+	]"/>
+    
+    <aura:registerEvent type="c:qry_bldr_Remove_Item_Event" name="removeEvent" description="Indicates the item needs to be deleted"/>
+</aura:interface>

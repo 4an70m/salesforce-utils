@@ -1,0 +1,50 @@
+<aura:component implements="c:qry_bldr_Query_Builder_Item" description="qry_bldr_Query_Builder_Picklist_Select_Item" controller="qry_bldr_Picklist_Select_Item_Controller">
+    
+    <!--Attributes-->
+    <aura:attribute type="String" name="sobjectType" />
+    <aura:attribute type="List" name="fields" default="[]"/>
+    
+    <!--Handlers-->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+	<!--Markup-->
+    <div class="slds-grid ">
+        
+        <!--order-->
+        <div class="slds-col order-column slds-size_1-of-24 slds-p-right_medium">
+        	<div class="slds-p-vertical_x-small">
+                {!v.order}
+            </div>
+        </div>
+        
+        <!--field-->
+        <div class="slds-col slds-p-right_medium slds-p-left_xxx-small">
+			<lightning:select name="selectItem" label="" value="{!v.field}">
+                <aura:iteration items="{!v.fields}" var="feild">
+                    <option text="{!feild.label}" value="{!feild.value}" selected="{!feild.selected}"/>
+                </aura:iteration>
+            </lightning:select>
+        </div>
+        
+        <!--action-->
+        <div class="slds-col slds-p-right_medium">
+            <lightning:select name="selectItem" label="" value="{!v.action}">
+                <aura:iteration items="{!v.standardActions}" var="item">
+                    <option text="{!item.label}" value="{!item.action}" selected="{!item.selected}"/>
+                </aura:iteration>
+            </lightning:select>
+        </div>
+        
+        <!--action value-->
+        <div class="slds-col slds-p-right_medium">
+            <lightning:input type="text" label="" name="compareValue" value="{!v.compareValue}"/>
+        </div>
+        
+        <!--remove action-->
+        <div class="slds-col button-column slds-size_1-of-24 ">
+            <lightning:button label="" iconName="utility:close" onclick="{!c.sendRemoveEvent}"/>
+        </div>
+        
+    </div>
+	
+</aura:component>

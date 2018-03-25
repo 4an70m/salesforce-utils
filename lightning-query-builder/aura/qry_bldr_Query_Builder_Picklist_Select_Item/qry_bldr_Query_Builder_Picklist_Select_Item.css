@@ -1,0 +1,14 @@
+.THIS {
+}
+
+.THIS .order-column, .THIS .button-column {
+    display: flex;
+    flex-direction: column-reverse;
+}
+.THIS .button-column button {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+.THIS .button-column button svg {
+    margin: 0;
+}

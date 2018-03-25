@@ -1,0 +1,35 @@
+<aura:component description="qry_bldr_Query_Builder_Main">
+    
+    <!--Attributes-->
+    <aura:attribute type="String" name="sobjectType" default="Account" />
+    <aura:attribute type="List" name="queryConditionItems" default="[]"/>
+    <aura:attribute type="Integer" name="defaultNumberOfQueryconditions" default="3"/>
+    <aura:attribute type="String" name="conditionBuilderOrder" default=""/>
+    
+    <!--Handlers-->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <aura:handler name="removeEvent" event="c:qry_bldr_Remove_Item_Event" action="{!c.removeItemByOrder}"/>
+    
+    <!--Markup-->
+    <div class="slds-container_medium slds-container">
+        
+        <!--Markup: conditions-->
+        <aura:iteration items="{!v.queryConditionItems}" var="item">
+            {!item}
+        </aura:iteration>
+    
+        <!--Markup: condition order control-->
+        <div>
+            <lightning:input type="text" label="" name="field" value="{!v.conditionBuilderOrder}"/>
+        </div>
+        
+        <!--Markup: condition controls-->
+        <div class="slds-p-top_medium">
+            <lightning:button variant="neutral" label="Add Condition" iconName="utility:add" iconPosition="left" onclick="{! c.addQueryCondition }" />
+            <lightning:button variant="brand" label="Build Query" onclick="{! c.runQueryBuilder }" />
+        </div>
+        
+    </div>
+    
+	
+</aura:component>

@@ -1,0 +1,3 @@
+<aura:event type="COMPONENT" description="qry_bldr_Remove_Item_Event: Sends notification to main component to remove this item">
+    <aura:attribute type="Integer" name="order" />
+</aura:event>
