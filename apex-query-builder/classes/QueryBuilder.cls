@@ -208,10 +208,10 @@ public with sharing class QueryBuilder {
     }
 
     public SObject toSObject() {
-    	List<SObject> result = this.toList();
-    	if (result.isEmpty()) {
-    		return null;
-    	}
+        List<SObject> result = this.toList();
+        if (result.isEmpty()) {
+            return null;
+        }
         return result[0];
     }
 
@@ -229,7 +229,7 @@ public with sharing class QueryBuilder {
     }
 
     public PostQueryFilter qbFilter() {
-    	return null;
+        return this.postQueryFilter;
     }
 
     //helper functions
@@ -258,26 +258,15 @@ public with sharing class QueryBuilder {
 
         private final String BRACKET_L = '{';
         private final String BRACKET_R = '}';
-        public final String QUOTE = '\'';
 
         public List<Condition> conditions;
         private String conditionOrder;
         private final QueryBuilder queryBuilder;
-        private Integer inCollectionNumber;
 
         private String builtCondition;
 
-        private Map<String, List<String>> inStringLists;
-    	private Map<String, List<Decimal>> inDecimalLists;
-    	private Map<String, List<Id>> inIdLists;
-
-    	private Map<String, Set<String>> inStringSets;
-    	private Map<String, Set<Decimal>> inDecimalSets;
-    	private Map<String, Set<Id>> inIdSets;
-
         public ConditionsManager(QueryBuilder queryBuilder) {
             this.queryBuilder = queryBuilder;
-            this.inCollectionNumber = 1;
             this.conditions = new List<Condition>();
         }
 
@@ -312,11 +301,8 @@ public with sharing class QueryBuilder {
                 result = '1';
             }
             result = this.bracketConditions(result);
-
             for (Integer i = 0; i < this.conditions.size(); i++) {
                 Condition condition = this.conditions[i];
-            	this.handleInCondition(condition);
-
                 String conditionNumber = this.bracket('' + (i + 1));
                 if(result.contains(conditionNumber)) {
                     result = result.replace(conditionNumber, condition.toString());
@@ -346,33 +332,6 @@ public with sharing class QueryBuilder {
         private String bracket(String condition) {
             return this.BRACKET_L + condition.trim() + this.BRACKET_R;
         }
-
-        private String getNewCollectionPath(String collectionMap, String collectionName) {
-        	return 'conditionsManager.' + collectionMap + '.get(' + QUOTE + collectionName + QUOTE + ')';
-        }
-
-        private String getNewInCollectionIdentifier(String collectionType) {
-        	return collectionType + this.inCollectionNumber++;
-        }
-
-        private void handleInCondition(Condition condition) {
-    		if (!(condition instanceof InCondition)) {
-    			return;
-    		}
-    		InCondition inCondition = (InCondition) condition;
-    		String newCollectionName = '';
-    		String newCollectionPath = '';
-
-    		if(inCondition.inStringList != null) {
-    			if(this.inStringLists == null) {
-					this.inStringLists = new Map<String, List<String>>();
-    			}
-    			newCollectionName = this.getNewInCollectionIdentifier('List');
-    			newCollectionPath = this.getNewCollectionPath('inStringLists', newCollectionName);
-				this.inStringLists.put(newCollectionName, inCondition.inStringList);
-    		}
-    		inCondition.formCondtition(newCollectionPath);
-        }
     }
 
     public abstract class Condition {
@@ -395,7 +354,7 @@ public with sharing class QueryBuilder {
         }
 
         public override String toString() {
-            return String.escapeSingleQuotes(this.formedCondition);
+            return this.formedCondition;
         }
     }
 
@@ -413,21 +372,21 @@ public with sharing class QueryBuilder {
 
     public abstract class FieldCondition extends Condition {
 
-    	protected String fieldName;
+        protected String fieldName;
 
-    	public FieldCondition(String fieldName) {
-    		super();
-    		this.fieldName = fieldName;
-    	}
+        public FieldCondition(String fieldName) {
+            super();
+            this.fieldName = fieldName;
+        }
     }
 
     public class NullCondition extends FieldCondition {
 
-    	public NullCondition(String fieldName) {
-    		super(fieldName);
-    	}
+        public NullCondition(String fieldName) {
+            super(fieldName);
+        }
 
-    	//null
+        //null
         public Condition isNull() {
             this.formedCondition = this.fieldName + ' = NULL';
             return this;
@@ -439,61 +398,61 @@ public with sharing class QueryBuilder {
         }
     }
 
-    public class ComparisionCondition extends FieldCondition {
+    public class CompareCondition extends FieldCondition {
 
-    	public ComparisionCondition(String fieldName) {
-    		super(fieldName);
-    	}
+        public CompareCondition(String fieldName) {
+            super(fieldName);
+        }
 
-    	 //string
-        public Condition eq(String fieldName, String fieldValue) {
+        //string
+        public Condition eq(String fieldValue) {
             this.formedCondition = this.fieldName + ' = ' + this.quote(fieldValue);
             return this;
         }
 
-        public Condition ne(String fieldName, String fieldValue) {
+        public Condition ne(String fieldValue) {
             this.formedCondition = this.fieldName + ' != ' + this.quote(fieldValue);
             return this;
         }
 
         //boolean
-        public Condition eq(String fieldName, Boolean fieldValue) {
+        public Condition eq(Boolean fieldValue) {
             this.formedCondition = this.fieldName + ' = ' + fieldValue;
             return this;
         }
 
-        public Condition ne(String fieldName, Boolean fieldValue) {
+        public Condition ne(Boolean fieldValue) {
             this.formedCondition = this.fieldName + ' != ' + fieldValue;
             return this;
         }
 
         //number
-        public Condition eq(String fieldName, Decimal fieldValue) {
+        public Condition eq(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' = ' + fieldValue;
             return this;
         }
 
-        public Condition lt(String fieldName, Decimal fieldValue) {
+        public Condition lt(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' < ' + fieldValue;
             return this;
         }
 
-        public Condition gt(String fieldName, Decimal fieldValue) {
+        public Condition gt(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' > ' + fieldValue;
             return this;
         }
 
-        public Condition lte(String fieldName, Decimal fieldValue) {
+        public Condition lte(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' >= ' + fieldValue;
             return this;
         }
 
-        public Condition gte(String fieldName, Decimal fieldValue) {
+        public Condition gte(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' <= ' + fieldValue;
             return this;
         }
 
-        public Condition ne(String fieldName, Decimal fieldValue) {
+        public Condition ne(Decimal fieldValue) {
             this.formedCondition = this.fieldName + ' != ' + fieldValue;
             return this;
         }
@@ -501,11 +460,11 @@ public with sharing class QueryBuilder {
 
     public class LikeCondition extends FieldCondition {
 
-		public LikeCondition(String fieldName) {
-			super(fieldName);
-		}
+        public LikeCondition(String fieldName) {
+            super(fieldName);
+        }
 
-    	 //like
+        //like
         public Condition likeAnyBoth(String fieldValue) {
             this.formedCondition = this.fieldName + ' LIKE ' + this.quote('%' + fieldValue + '%');
             return this;
@@ -577,51 +536,103 @@ public with sharing class QueryBuilder {
 
     public class InCondition extends FieldCondition {
 
- 		private List<String> inStringList;
-    	private List<Decimal> inDecimalList;
-    	private List<Id> inIdList;
+        public InCondition(String fieldName) {
+            super(fieldName);
+        }
 
-    	private Set<String> inStringSet;
-    	private Set<Decimal> inDecimalSet;
-    	private Set<Id> inIdSet;
+        //in - set
+        public Condition inCollection(Set<String> inSet) {
+            if (inSet.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildIn(inSet);
+            return this;
+        }
 
-    	public InCondition(String fieldName) {
-    		super(fieldName);
-    	}
+        public Condition inCollection(Set<Id> inSet) {
+            if (inSet.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildIn(inSet);
+            return this;
+        }
 
-    	public Condition inCollection(List<String> inStringList) {
-			this.inStringList = inStringList;
-			return this;
-    	}
+        public Condition inCollection(Set<Decimal> inSet) {
+            if (inSet.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildInNoQuote(inSet);
+            return this;
+        }
 
-    	public Condition inCollection(List<Decimal> inDecimalList) {
-			this.inDecimalList = inDecimalList;
-			return this;
-    	}
+        private String buildIn(Set<String> inSet) {
+            return this.BRACKET_L
+                    + this.QUOTE
+                    + String.join(new List<String> (inSet), this.QUOTE + ', ' + this.QUOTE)
+                    + this.QUOTE
+                    + this.BRACKET_R;
+        }
 
-    	public Condition inCollection(List<Id> inIdList) {
-			this.inIdList = inIdList;
-			return this;
-    	}
+        private String buildIn(Set<Id> inSet) {
+            return this.BRACKET_L
+                    + this.QUOTE
+                    + String.join(new List<Id> (inSet), this.QUOTE + ', ' + this.QUOTE)
+                    + this.QUOTE
+                    + this.BRACKET_R;
+        }
 
-    	public Condition inCollection(Set<String> inStringSet) {
-			this.inStringSet = inStringSet;
-			return this;
-    	}
+        private String buildInNoQuote(Set<Decimal> inSet) {
+            return this.BRACKET_L
+                    + String.join(new List<Decimal> (inSet), ', ')
+                    + this.BRACKET_R;
+        }
 
-    	public Condition inCollection(Set<Decimal> inDecimalSet) {
-			this.inDecimalSet = inDecimalSet;
-			return this;
-    	}
+        //in - list
+        public Condition inCollection(List<String> inList) {
+            if (inList.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildIn(inList);
+            return this;
+        }
 
-    	public Condition inCollection(Set<Id> inIdSet) {
-			this.inIdSet = inIdSet;
-			return this;
-    	}
+        public Condition inCollection(List<Id> inList) {
+            if (inList.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildIn(inList);
+            return this;
+        }
 
-    	private void formCondtition(String collectionName) {
-    		this.formedCondition = this.fieldName + ' IN :' + collectionName;
-    	}
+        public Condition inCollection(List<Decimal> inList) {
+            if (inList.isEmpty()) {
+                this.formedCondition = '';
+            }
+            this.formedCondition = this.fieldName + ' IN ' + this.buildInNoQuote(inList);
+            return this;
+        }
+
+        private String buildIn(List<String> inList) {
+            return this.BRACKET_L
+                    + this.QUOTE
+                    + String.join(inList, this.QUOTE + ', ' + this.QUOTE)
+                    + this.QUOTE
+                    + this.BRACKET_R;
+        }
+
+        private String buildIn(List<Id> inList) {
+            return this.BRACKET_L
+                    + this.QUOTE
+                    + String.join(inList, this.QUOTE + ', ' + this.QUOTE)
+                    + this.QUOTE
+                    + this.BRACKET_R;
+        }
+
+        private String buildInNoQuote(List<Decimal> inList) {
+            return this.BRACKET_L
+                    + String.join(inList, ', ')
+                    + this.BRACKET_R;
+        }
     }
 
     //post query conditions
