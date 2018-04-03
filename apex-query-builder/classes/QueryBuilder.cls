@@ -26,6 +26,20 @@ public with sharing class QueryBuilder {
         this.fromSobject = fromSobject.trim();
     }
 
+    public QueryBuilder(SObjectType type) {
+        this();
+        this.fromSobject = type.getDescribe().getName();
+    }
+
+    public QueryBuilder(Type type) {
+        this();
+        this.fromSobject = type.getName();
+    }
+
+    public QueryBuilder(SObject sobj) {
+        this(sobj.getSObjectType());
+    }
+
     public QueryBuilder(List<SObject> resultList) {
         this();
         this.result = resultList;
@@ -37,17 +51,28 @@ public with sharing class QueryBuilder {
         this.qbFields(firstSobj);
     }
 
-    //query formers
-    public QueryBuilder qbFrom(SObject sobj) {
-        String sobjectName = sobj.getSObjectType().getDescribe().getName();
-        return this.qbFrom(sobjectName);
-    }
-
+    //from
     public QueryBuilder qbFrom(String sobjName) {
         this.fromSobject = sobjName.trim();
         return this;
     }
 
+    public QueryBuilder qbFrom(SObjectType type) {
+        String sobjectName = type.getDescribe().getName();
+        return this.qbFrom(sobjectName);
+    }
+
+    public QueryBuilder qbFrom(Type type) {
+        this.fromSobject = type.getName();
+        return this;
+    }
+
+    public QueryBuilder qbFrom(SObject sobj) {
+        String sobjectName = sobj.getSObjectType().getDescribe().getName();
+        return this.qbFrom(sobjectName);
+    }
+
+    //fields
     public QueryBuilder qbField(String fieldName) {
         if (fieldName.contains(',')) {
             return this.qbFields(fieldName);
@@ -86,16 +111,34 @@ public with sharing class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder qbFields(FieldSet fieldSet) {
-        Set<String> fieldNames = new Set<String>();
-        for (FieldSetMember fieldSetMember : fieldSet.getFields()) {
-            fieldNames.add(fieldSetMember.getFieldPath());
-        }
+    //all fields
+    public QueryBuilder qbFieldsAll() {
+        return this.qbFieldsAll(this.fromSobject);
+    }
+
+    public QueryBuilder qbFieldsAll(String sobjectName) {
+        Set<String> fieldNames = Schema.getGlobalDescribe().get(sobjectName).getDescribe().fields.getMap().keySet();
         this.fieldTokens.addAll(fieldNames);
         return this;
     }
 
-    public QueryBuilder qbFields(String objectName, String fieldSetName) {
+    public QueryBuilder qbAllCreatableFields() {
+        Schema.SObjectType objectType = Schema.getGlobalDescribe().get(this.fromSobject);
+        Map<String, Schema.SObjectField> fieldMap = objectType.getDescribe().fields.getMap();
+
+        Set<String> createableFields = new Set<String>{};
+        for (Schema.SObjectField field : fieldMap.values()) {
+            DescribeFieldResult fieldDescribe = field.getDescribe();
+            if (fieldDescribe.isCreateable()) {
+                createableFields.add(fieldDescribe.getName());
+            }
+        }
+        fieldTokens.addAll(createableFields);
+        return this;
+    }
+
+    //field sets
+    public QueryBuilder qbFieldSet(String objectName, String fieldSetName) {
         Set<String> result = new Set<String>();
         Map<String, Schema.SObjectType> globalDescribeMap = Schema.getGlobalDescribe();
         Schema.SObjectType sObjectTypeObj = GlobalDescribeMap.get(objectName);
@@ -107,16 +150,11 @@ public with sharing class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder qbFieldsAll() {
-        if (String.isNotEmpty(this.fromSobject)) {
-            return this.qbFieldsAll(this.fromSobject);
+    public QueryBuilder qbFieldSet(FieldSet fieldSet) {
+        Set<String> fieldNames = new Set<String>();
+        for (FieldSetMember fieldSetMember : fieldSet.getFields()) {
+            fieldNames.add(fieldSetMember.getFieldPath());
         }
-        System.debug('qbFieldsAll: SObject is not specified');
-        return this;
-    }
-
-    public QueryBuilder qbFieldsAll(String sobjectName) {
-        Set<String> fieldNames = Schema.getGlobalDescribe().get(sobjectName).getDescribe().fields.getMap().keySet();
         this.fieldTokens.addAll(fieldNames);
         return this;
     }
@@ -133,15 +171,18 @@ public with sharing class QueryBuilder {
         return this;
     }
 
+    //conditions
     public ConditionsManager qbCondition() {
         return this.conditionsManager;
     }
 
+    //limits
     public QueryBuilder setLimit(Integer queryLimit) {
         this.queryLimit = queryLimit;
         return this;
     }
 
+    //orders
     public QueryBuilder orderAsc(String field) {
         this.sortingOrder.add(new AscOrder(field));
         return this;
@@ -166,6 +207,7 @@ public with sharing class QueryBuilder {
         return this;
     }
 
+    //results
     public override String toString() {
         String result = 'SELECT ';
         String fields = String.join(new List<String>(this.fieldTokens), ', ');
@@ -228,6 +270,7 @@ public with sharing class QueryBuilder {
         return result;
     }
 
+    //post query filter
     public PostQueryFilter qbFilter() {
         return this.postQueryFilter;
     }
