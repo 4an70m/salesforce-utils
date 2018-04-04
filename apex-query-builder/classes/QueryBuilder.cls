@@ -197,9 +197,10 @@ public with sharing class QueryBuilder {
 
     //result or pre-result managers
     public QueryBuilder preview() {
-        System.debug('\nRESULTING QUERY');
-        System.debug(this.toString());
-        System.debug('\n');
+        String logRecord = '\n============RESULTING QUERY============\n\n'
+            + this.toString()
+            + '\n\n=======================================\n';
+        System.debug(logRecord);
         return this;
     }
 
