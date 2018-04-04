@@ -423,11 +423,20 @@ public with sharing class QueryBuilder {
             super();
             this.fieldName = fieldName;
         }
+
+        public FieldCondition(SObjectField fieldName) {
+            super();
+            this.fieldName = fieldName.getDescribe().getName();
+        }
     }
 
     public class NullCondition extends FieldCondition {
 
         public NullCondition(String fieldName) {
+            super(fieldName);
+        }
+
+        public NullCondition(SObjectField fieldName) {
             super(fieldName);
         }
 
@@ -446,6 +455,10 @@ public with sharing class QueryBuilder {
     public class CompareCondition extends FieldCondition {
 
         public CompareCondition(String fieldName) {
+            super(fieldName);
+        }
+
+        public CompareCondition(SObjectField fieldName) {
             super(fieldName);
         }
 
@@ -509,6 +522,10 @@ public with sharing class QueryBuilder {
             super(fieldName);
         }
 
+        public LikeCondition(SObjectField fieldName) {
+            super(fieldName);
+        }
+
         //like
         public Condition likeAnyBoth(String fieldValue) {
             this.formedCondition = this.fieldName + ' LIKE ' + this.quote('%' + fieldValue + '%');
@@ -526,62 +543,13 @@ public with sharing class QueryBuilder {
         }
     }
 
-    public class ComplexCondition extends Condition {
-
-        private Condition startCondition;
-        private List<String> conditionsOrder;
-        private List<Condition> conditions;
-
-        public ComplexCondition() {
-            super();
-            this.startCondition = null;
-            this.conditions = new List<Condition>();
-            this.conditionsOrder = new List<String>();
-        }
-
-        public ComplexCondition startCondition(Condition condition) {
-            this.startCondition = condition;
-            return this;
-        }
-
-        public ComplexCondition orCondition(Condition condition) {
-            if (this.startCondition == null) {
-                return this.startCondition(condition);
-            }
-            this.conditions.add(condition);
-            this.conditionsOrder.add('OR');
-            return this;
-        }
-
-        public ComplexCondition andCondition(Condition condition) {
-            if (this.startCondition == null) {
-                return this.startCondition(condition);
-            }
-            this.conditions.add(condition);
-            this.conditionsOrder.add('AND');
-            return this;
-        }
-
-        public ComplexCondition build() {
-            if (this.startCondition == null) {
-                this.formedCondition = '';
-                return this;
-            }
-            this.formedCondition = BRACKET_L;
-            this.formedCondition += this.startCondition.toString() + ' ';
-            for (Integer i = 0; i < conditions.size(); i++) {
-                String conditionOrder = this.conditionsOrder[i];
-                Condition condition = this.conditions[i];
-                this.formedCondition += conditionOrder + ' ' + condition.toString() + ' ';
-            }
-            formedCondition += BRACKET_R;
-            return this;
-        }
-    }
-
     public class InCondition extends FieldCondition {
 
         public InCondition(String fieldName) {
+            super(fieldName);
+        }
+
+        public InCondition(SObjectField fieldName) {
             super(fieldName);
         }
 
@@ -677,6 +645,59 @@ public with sharing class QueryBuilder {
             return this.BRACKET_L
                     + String.join(inList, ', ')
                     + this.BRACKET_R;
+        }
+    }
+
+    public class ComplexCondition extends Condition {
+
+        private Condition startCondition;
+        private List<String> conditionsOrder;
+        private List<Condition> conditions;
+
+        public ComplexCondition() {
+            super();
+            this.startCondition = null;
+            this.conditions = new List<Condition>();
+            this.conditionsOrder = new List<String>();
+        }
+
+        public ComplexCondition startCondition(Condition condition) {
+            this.startCondition = condition;
+            return this;
+        }
+
+        public ComplexCondition orCondition(Condition condition) {
+            if (this.startCondition == null) {
+                return this.startCondition(condition);
+            }
+            this.conditions.add(condition);
+            this.conditionsOrder.add('OR');
+            return this;
+        }
+
+        public ComplexCondition andCondition(Condition condition) {
+            if (this.startCondition == null) {
+                return this.startCondition(condition);
+            }
+            this.conditions.add(condition);
+            this.conditionsOrder.add('AND');
+            return this;
+        }
+
+        public ComplexCondition build() {
+            if (this.startCondition == null) {
+                this.formedCondition = '';
+                return this;
+            }
+            this.formedCondition = BRACKET_L;
+            this.formedCondition += this.startCondition.toString() + ' ';
+            for (Integer i = 0; i < conditions.size(); i++) {
+                String conditionOrder = this.conditionsOrder[i];
+                Condition condition = this.conditions[i];
+                this.formedCondition += conditionOrder + ' ' + condition.toString() + ' ';
+            }
+            formedCondition += BRACKET_R;
+            return this;
         }
     }
 
