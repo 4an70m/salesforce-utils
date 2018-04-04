@@ -1,7 +1,3 @@
-/**
- * Created by User on 18.03.2018.
- */
-
 public with sharing class QueryBuilder {
 
     private String fromSobject;
