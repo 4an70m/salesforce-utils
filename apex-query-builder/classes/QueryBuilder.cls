@@ -77,6 +77,11 @@ public with sharing class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder qbField(SObjectField field) {
+        this.fieldTokens.add(field.getDescribe().getName());
+        return this;
+    }
+
     public QueryBuilder qbFields(SObject sobj) {
         Map<String, Object> populatedFields = sobj.getPopulatedFieldsAsMap();
         for (String field : populatedFields.keySet()) {
