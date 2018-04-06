@@ -5,6 +5,7 @@ public with sharing class QueryBuilder {
     private ConditionsManager conditionsManager;
     private PostQueryFilter postQueryFilter;
     private Integer queryLimit;
+    private Integer countResult;
 
     private List<SObject> result;
     private List<Order> sortingOrder;
@@ -15,6 +16,7 @@ public with sharing class QueryBuilder {
         this.conditionsManager = new ConditionsManager(this);
         this.postQueryFilter = new PostQueryFilter(this);
         this.queryLimit = 0;
+        this.countResult = null;
     }
 
     public QueryBuilder(String fromSobject) {
@@ -204,6 +206,17 @@ public with sharing class QueryBuilder {
         return this;
     }
 
+    public QueryBuilder previewCount() {
+        if(this.countResult == null) {
+            this.countResult = this.toCount();
+        }
+        String logRecord = '\n============COUNT RESULT============\n\n'
+                + 'Query will return exactly: ' + this.countResult + ' record(s).'
+                + '\n\n=======================================\n';
+        System.debug(logRecord);
+        return this;
+    }
+
     public QueryBuilder resetQuery() {
         this.result = null;
         return this;
@@ -230,6 +243,24 @@ public with sharing class QueryBuilder {
             result += 'LIMIT ' + queryLimit + ' ';
         }
         return result;
+    }
+
+    public String toCountString() {
+        String result = 'SELECT ';
+        String countString = 'count() ';
+        result += countString;
+        result += 'FROM ' + this.fromSobject + ' ';
+        if (this.conditionsManager.hasConditions()) {
+            result += 'WHERE ' + this.conditionsManager.builtCondition + ' ';
+        }
+        return result;
+    }
+
+    public Integer toCount() {
+        if (this.countResult == null) {
+            this.countResult = Database.countQuery(this.toCountString());
+        }
+        return this.countResult;
     }
 
     public List<SObject> toList() {
@@ -348,6 +379,9 @@ public with sharing class QueryBuilder {
             result = this.bracketConditions(result);
             for (Integer i = 0; i < this.conditions.size(); i++) {
                 Condition condition = this.conditions[i];
+                if (condition instanceof ObjectTypeDependentCondition) {
+                    ((ObjectTypeDependentCondition) condition).setRelatedObjectType(this.queryBuilder.fromSobject);
+                }
                 String conditionNumber = this.bracket('' + (i + 1));
                 if(result.contains(conditionNumber)) {
                     result = result.replace(conditionNumber, condition.toString());
@@ -398,7 +432,7 @@ public with sharing class QueryBuilder {
             return BRACKET_L + field.trim() + BRACKET_R;
         }
 
-        public override String toString() {
+        public virtual override String toString() {
             return this.formedCondition;
         }
     }
@@ -698,6 +732,38 @@ public with sharing class QueryBuilder {
             }
             formedCondition += BRACKET_R;
             return this;
+        }
+    }
+
+    public abstract class ObjectTypeDependentCondition extends Condition {
+
+        private String objectType;
+
+        public ObjectTypeDependentCondition() {
+            super();
+        }
+
+        public void setRelatedObjectType(String objectType) {
+            this.objectType = objectType;
+        }
+    }
+
+    public class RecordTypeCondition extends ObjectTypeDependentCondition {
+
+        private String recordTypeName;
+
+        public RecordTypeCondition(String recordTypeName) {
+            super();
+            this.recordTypeName = recordTypeName;
+        }
+
+        private Id getRecordTypeId() {
+            return Schema.getGlobalDescribe().get(this.objectType).getDescribe().getRecordTypeInfosByName().get(this.recordTypeName).getRecordTypeId();
+        }
+
+        public override String toString() {
+            this.formedCondition = 'RecordTypeId = ' + this.quote(this.getRecordTypeId());
+            return this.formedCondition;
         }
     }
 
