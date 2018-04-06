@@ -281,6 +281,38 @@ public with sharing class QueryBuilder {
         return new Map<Id, SObject>(this.toList());
     }
 
+    public Map<String, List<SObject>> toMap(String fieldName) {
+        Map<String, List<SObject>> result = new Map<String, List<SObject>>();
+        List<String> fieldPath = fieldName.split('\\.');
+        Integer pathSize = fieldPath.size();
+
+        for (SObject sobj : this.toList()) {
+
+            Integer i = 0;
+            String key = null;
+            SObject tempSobject = sobj;
+
+            for (String pathPart : fieldPath) {
+                i++;
+                if (i == pathSize) {
+                    key = (String) tempSobject.get(pathPart);
+                    break;
+                }
+                tempSobject = sobj.getSObject(pathPart);
+            }
+
+            if (!result.containsKey(key)) {
+                result.put(key, new List<SObject>());
+            }
+            result.get(key).add(sobj);
+        }
+        return result;
+    }
+
+    public Map<String, List<SObject>> toMap(SObjectField field) {
+        return this.toMap(field.getDescribe().getName());
+    }
+
     public Map<Id, SObject> toMap(Map<Id, SObject> mapToFill) {
         for (SObject sobj : this.toList()) {
             Id sobjId = (Id) sobj.get('Id');
