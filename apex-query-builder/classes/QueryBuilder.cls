@@ -4,6 +4,7 @@ public with sharing class QueryBuilder {
     private Set<String> fieldTokens;
     private ConditionsManager conditionsManager;
     private PostQueryFilter postQueryFilter;
+    private PostQueryUpdater postQueryUpdater;
     private Integer queryLimit;
     private Integer countResult;
 
@@ -15,6 +16,7 @@ public with sharing class QueryBuilder {
         this.sortingOrder = new List<Order>();
         this.conditionsManager = new ConditionsManager(this);
         this.postQueryFilter = new PostQueryFilter(this);
+        this.postQueryUpdater = new postQueryUpdater(this);
         this.queryLimit = 0;
         this.countResult = null;
     }
@@ -225,7 +227,12 @@ public with sharing class QueryBuilder {
     //results
     public override String toString() {
         String result = 'SELECT ';
-        String fields = String.join(new List<String>(this.fieldTokens), ', ');
+        String fields = '';
+        if (this.fieldTokens.isEmpty()) {
+            fields = 'Id';
+        } else {
+            fields = String.join(new List<String>(this.fieldTokens), ', ');
+        }
         result += fields + ' ';
         result += 'FROM ' + this.fromSobject + ' ';
         if (this.conditionsManager.hasConditions()) {
@@ -308,6 +315,11 @@ public with sharing class QueryBuilder {
         return this.postQueryFilter;
     }
 
+    //post query updater
+    public PostQueryUpdater qbUpdater() {
+        return this.postQueryUpdater;
+    }
+
     //helper functions
     public QueryBuilder cloneQueryBuilder() {
         return this.cloneQueryBuilder(false);
@@ -324,6 +336,7 @@ public with sharing class QueryBuilder {
         }
         result.sortingOrder = new List<Order>(this.sortingOrder);
         result.postQueryFilter = new PostQueryFilter(result);
+        result.postQueryUpdater = new PostQueryUpdater(result);
         return result;
     }
 
@@ -832,6 +845,80 @@ public with sharing class QueryBuilder {
         public Filter() {}
 
         public abstract List<SObject> filterRecords(List<SObject> recordsList);
+    }
+
+    //post query updater
+    public class PostQueryUpdater {
+
+        public final List<Updater> updaters;
+        private final QueryBuilder queryBuilder;
+
+        public PostQueryUpdater(QueryBuilder queryBuilder) {
+            this.queryBuilder = queryBuilder;
+            this.updaters = new List<Updater>();
+        }
+
+        public PostQueryUpdater add(Updater updater) {
+            this.updaters.add(updater);
+            return this;
+        }
+
+        public QueryBuilder performUpdate() {
+            List<SObject> toUpdate = this.queryBuilder.toList();
+            for (SObject sobj : toUpdate) {
+                for (Updater updater : this.updaters) {
+                    updater.applyUpdate(sobj);
+                }
+            }
+            update toUpdate;
+            return this.queryBuilder;
+        }
+    }
+
+    public abstract class Updater {
+
+        public Updater() {
+        }
+
+        protected abstract Updater applyUpdate(SObject sobj);
+    }
+
+    public abstract class FieldUpdater extends Updater {
+
+        protected String fieldName;
+
+        public FieldUpdater(String fieldName) {
+            super();
+            this.fieldName = fieldName;
+        }
+
+        public FieldUpdater(SObjectField fieldName) {
+            super();
+            this.fieldName = fieldName.getDescribe().getName();
+        }
+    }
+
+    public class FieldUpdate extends FieldUpdater {
+
+        private Object value;
+
+        public FieldUpdate(String fieldName) {
+            super(fieldName);
+        }
+
+        public FieldUpdate(SObjectField fieldName) {
+            super(fieldName);
+        }
+
+        public Updater set(Object value) {
+            this.value = value;
+            return this;
+        }
+
+        protected override Updater applyUpdate(SObject sobj) {
+            sobj.put(this.fieldName, this.value);
+            return this;
+        }
     }
 
     //orders
