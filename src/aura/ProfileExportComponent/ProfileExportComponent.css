@@ -1,0 +1,7 @@
+/**
+ * Created by 4an70 on 10/3/2018.
+ */
+.THIS .scrollable-table-fixed-size {
+    height: 400px;
+    overflow-y: auto;
+}

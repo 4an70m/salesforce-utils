@@ -1,0 +1,28 @@
+<!--
+ - Created by User on 07.05.2018.
+ -->
+
+<aura:component description="ExcelImport">
+
+    <ltng:require scripts="{!$Resource.ExcelImport}"/>
+    <aura:registerEvent name="onImport" type="c:ExcelImportEvent"/>
+
+    <aura:attribute name="class" type="String" description="Additional styles" required="false"/>
+    <aura:attribute name="label" type="String" description="Label for input" default="Import Excel File" required="false"/>
+    <aura:attribute name="variant" type="String" description="Input variant" required="false"/>
+    <aura:attribute name="fileSizeThreshold" type="Integer" description="Max file size in bytes, default 10mb" default="10000000" required="false"/>
+
+    <aura:attribute name="labelFileSizeExceeded" type="String" default="File size exceeded" required="false"/>
+    <aura:attribute name="labelNoFileSpecified" type="String" default="No file specified" required="false"/>
+
+    <span>
+        <lightning:input type="file"
+                         label="{!v.label}"
+                         class="{!v.class}"
+                         variant="{!v.variant}"
+                         onchange="{!c.onTableImport}"
+                         name="excelImport"
+                         multiple="false"
+                         accept=".xls, .xlsx"/>
+    </span>
+</aura:component>

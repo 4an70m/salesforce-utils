@@ -1,0 +1,59 @@
+<!--
+ - Created by 4an70 on 10/2/2018.
+ -->
+
+<aura:component description="ProfileExportComponent" controller="ProfileImportExportController"
+                implements="force:appHostable">
+
+    <aura:attribute name="profiles" type="List"/>
+    <aura:attribute name="filteredProfiles" type="List"/>
+    <aura:attribute name="profileColumns" type="List"/>
+    <aura:attribute name="permissionType" type="String" default="field-permissions"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <ltng:require scripts="{!$Resource.XLSXJs}"/>
+
+    <lightning:tabset selectedTabId="Export">
+        <lightning:tab id="Export" label="Export">
+            <div>
+                <lightning:layout multipleRows="true">
+                    <lightning:layout verticalAlign="end">
+                        <lightning:layoutItem padding="around-small">
+                            <lightning:input label="Filter" aura:id="filterField" onkeyup="{!c.filterProfiles}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small">
+                            <lightning:select label="Permission Type" required="true" onchange="{!v.permissionType}">
+                                <option value="field-permissions">Field Permissions</option>
+                                <option value="object-permissions">Object Permissions</option>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem padding="around-small">
+                            <lightning:button label="Export Selected to Excel" variant="brand"
+                                              onclick="{!c.exportSelectedProfiles}"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                    <lightning:layoutItem>
+                        <lightning:accordion activeSectionName="Profiles-List">
+                            <lightning:accordionSection name="Profiles-List" label="Profiles List">
+                                <div class="scrollable-table-fixed-size">
+                                    <lightning:datatable
+                                            aura:id="profilesTable"
+                                            keyField="id"
+                                            data="{!v.filteredProfiles}"
+                                            columns="{!v.profileColumns}"
+                                    />
+                                </div>
+                            </lightning:accordionSection>
+                        </lightning:accordion>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+        </lightning:tab>
+        <lightning:tab id="Import" label="Import">
+            <div>
+                <c:ExcelImport onImport="{!c.tableImport}"/>
+            </div>
+        </lightning:tab>
+    </lightning:tabset>
+</aura:component>
